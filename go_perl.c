@@ -1,11 +1,48 @@
 #include "go_perl.h"
 
+#define EVAL_DIE -1
+#define EVAL_EXIT -2
+
 static int go_perl_argc = 3;
 static char* go_perl_argv_arr[4] = { "go-perl", "-e", "0", NULL};
 static char* go_perl_env_arr[1] = { NULL };
 
 static char** go_perl_argv = go_perl_argv_arr;
 static char** go_perl_env = go_perl_env_arr;
+
+static I32 do_eval(go_perl_interpreter* my_perl, go_perl_sv* code, I32 flags, go_perl_sv** exc) {
+    int ret;
+    dJMPENV;
+
+    JMPENV_PUSH(ret);
+
+    I32 retcount;
+    switch (ret) {
+    case 0:
+        retcount = eval_sv(code, flags);
+        go_perl_sv* errsv = GvSVn(PL_errgv);
+        if (!SvOK(errsv) || !SvPOK(errsv) || SvCUR(errsv) > 0) {
+            *exc = errsv;
+            retcount = EVAL_DIE;
+        }
+        break;
+    case 1:
+        // complete failure
+    case 2:
+        // exit called
+        retcount = EVAL_EXIT;
+        break;
+    case 3:
+        // this should only happen when G_RETHROW is used
+        *exc = GvSV(PL_errgv);
+        retcount = EVAL_DIE;
+        break;
+    }
+
+    JMPENV_POP;
+
+    return retcount;
+}
 
 void go_perl_init() {
     PERL_SYS_INIT3(&go_perl_argc, &go_perl_argv, &go_perl_env);
@@ -23,10 +60,41 @@ go_perl_interpreter* go_perl_new_interpreter() {
     return my_perl;
 }
 
+void go_perl_open_scope(go_perl_interpreter* my_perl) {
+    ENTER;
+    SAVETMPS;
+}
+
+void go_perl_close_scope(go_perl_interpreter* my_perl) {
+    FREETMPS;
+    LEAVE;
+}
+
 go_perl_sv* go_perl_get_global_scalar(go_perl_interpreter* my_perl, const char* name, int flags) {
     return get_sv(name, flags);
 }
 
-char *go_perl_svpv(go_perl_interpreter* my_perl, go_perl_sv* sv, go_perl_strlen* len) {
+void go_perl_sv_refcnt_inc(go_perl_interpreter* my_perl, go_perl_sv* sv) {
+    SvREFCNT_inc(sv);
+}
+
+void go_perl_sv_refcnt_dec(go_perl_interpreter* my_perl, go_perl_sv* sv) {
+    SvREFCNT_dec(sv);
+}
+
+go_perl_sv* go_perl_new_mortal_sv_string(go_perl_interpreter* my_perl, char* pv, STRLEN len) {
+    return sv_2mortal(newSVpvn(pv, len));
+}
+
+char* go_perl_svpv(go_perl_interpreter* my_perl, go_perl_sv* sv, go_perl_strlen* len) {
     return SvPV(sv, *len);
+}
+
+int go_perl_eval_void(go_perl_interpreter* my_perl, go_perl_sv* code, go_perl_sv** exc) {
+    I32 retcount = do_eval(my_perl, code, G_VOID, exc);
+    if (retcount < 0) {
+        return retcount;
+    }
+
+    return 0;
 }

@@ -5,9 +5,13 @@ package perl
 */
 import "C"
 import (
+	"errors"
 	"runtime"
 	"unsafe"
 )
+
+// ErrExitCalled is returned from Eval*/Call* when the Perl code call exit()
+var ErrExitCalled = errors.New("exit called")
 
 // Interpreter is an instance of the Perl interpreter
 type Interpreter struct {
@@ -45,4 +49,27 @@ func (gpi *Interpreter) scalar(name string, flags int) *Scalar {
 		return nil
 	}
 	return newScalar(gpi, sv)
+}
+
+// EvalVoid avals the given string as Perl code, in void context
+func (gpi *Interpreter) EvalVoid(code string) error {
+	C.go_perl_open_scope(gpi.pi)
+	defer C.go_perl_close_scope(gpi.pi)
+
+	perlCode := toPerlMortalString(gpi, code)
+
+	var exc *C.go_perl_sv
+	var rescount = C.go_perl_eval_void(gpi.pi, perlCode, &exc)
+	if rescount < 0 {
+		return gpi.evalError(rescount, exc)
+	}
+
+	return nil
+}
+
+func (gpi *Interpreter) evalError(errCode C.int, exc *C.go_perl_sv) error {
+	if errCode == -2 {
+		return ErrExitCalled
+	}
+	return newScalarFromMortal(gpi, exc).asError()
 }
