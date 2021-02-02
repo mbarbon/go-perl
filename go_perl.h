@@ -1,6 +1,7 @@
 #ifndef _GO_PERL_H_DEFINED
 #define _GO_PERL_H_DEFINED
 
+#define PERL_NO_GET_CONTEXT
 #include "EXTERN.h"
 #include "perl.h"
 #include "XSUB.h"

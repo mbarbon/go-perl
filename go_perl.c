@@ -24,11 +24,9 @@ go_perl_interpreter* go_perl_new_interpreter() {
 }
 
 go_perl_sv* go_perl_get_global_scalar(go_perl_interpreter* my_perl, const char* name, int flags) {
-    PERL_SET_CONTEXT(my_perl);
     return get_sv(name, flags);
 }
 
 char *go_perl_svpv(go_perl_interpreter* my_perl, go_perl_sv* sv, go_perl_strlen* len) {
-    PERL_SET_CONTEXT(my_perl);
     return SvPV(sv, *len);
 }
