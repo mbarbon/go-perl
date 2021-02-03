@@ -34,3 +34,30 @@ func TestFailedEval(t *testing.T) {
 	err := i.EvalVoid(`die ""`)
 	assert.EqualError(t, err, "Died at (eval 1) line 1.\n")
 }
+
+func TestBasicCall(t *testing.T) {
+	i := NewInterpreter()
+
+	err := i.EvalVoid(`sub test { $val = $_[0] }`)
+	assert.NoError(t, err)
+
+	testSub := i.Sub("test")
+
+	err = testSub.CallVoid("hello, world")
+	assert.NoError(t, err)
+
+	val := i.Scalar("val")
+	assert.Equal(t, "hello, world", val.String())
+}
+
+func TestFailedCall(t *testing.T) {
+	i := NewInterpreter()
+
+	err := i.EvalVoid(`sub test { die "" }`)
+	assert.NoError(t, err)
+
+	testSub := i.Sub("test")
+
+	err = testSub.CallVoid()
+	assert.EqualError(t, err, "Died at (eval 1) line 1.\n")
+}

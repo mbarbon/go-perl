@@ -41,6 +41,16 @@ func (gpi *Interpreter) CreateScalar(name string) *Scalar {
 	return gpi.scalar(name, C.GV_ADD)
 }
 
+// Sub returns a reference to an existing package variable, or nil
+func (gpi *Interpreter) Sub(name string) *Sub {
+	return gpi.sub(name, 0)
+}
+
+// CreateSub returns a reference to an existing package variable, or creates a new one
+func (gpi *Interpreter) CreateSub(name string) *Sub {
+	return gpi.sub(name, C.GV_ADD)
+}
+
 func (gpi *Interpreter) scalar(name string, flags int) *Scalar {
 	cstr := C.CString(name)
 	defer C.free(unsafe.Pointer(cstr))
@@ -49,6 +59,16 @@ func (gpi *Interpreter) scalar(name string, flags int) *Scalar {
 		return nil
 	}
 	return newScalar(gpi, sv)
+}
+
+func (gpi *Interpreter) sub(name string, flags int) *Sub {
+	cstr := C.CString(name)
+	defer C.free(unsafe.Pointer(cstr))
+	cv := C.go_perl_get_global_code(gpi.pi, cstr, C.int(flags))
+	if cv == nil {
+		return nil
+	}
+	return newSub(gpi, cv)
 }
 
 // EvalVoid avals the given string as Perl code, in void context
