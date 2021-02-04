@@ -29,7 +29,11 @@ go_perl_sv* go_perl_new_mortal_sv_string(go_perl_interpreter* my_perl, char* pv,
 char* go_perl_svpv(go_perl_interpreter* my_perl, go_perl_sv* sv, go_perl_strlen* len);
 
 int go_perl_eval_void(go_perl_interpreter* my_perl, go_perl_sv* code, go_perl_sv** exc);
+int go_perl_eval_scalar(go_perl_interpreter* my_perl, go_perl_sv* code, go_perl_sv** exc, go_perl_sv** result);
+int go_perl_eval_list(go_perl_interpreter* my_perl, go_perl_sv* code, go_perl_sv** exc, go_perl_sv*** results);
 
 int go_perl_call_void(go_perl_interpreter* my_perl, go_perl_sv* sub, int argcount, go_perl_sv** args, go_perl_sv** exc);
+int go_perl_call_scalar(go_perl_interpreter* my_perl, go_perl_sv* sub, int argcount, go_perl_sv** args, go_perl_sv** exc, go_perl_sv** result);
+int go_perl_call_list(go_perl_interpreter* my_perl, go_perl_sv* sub, int argcount, go_perl_sv** args, go_perl_sv** exc, go_perl_sv*** results);
 
 #endif

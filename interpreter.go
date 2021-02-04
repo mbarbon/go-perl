@@ -87,6 +87,41 @@ func (gpi *Interpreter) EvalVoid(code string) error {
 	return nil
 }
 
+// EvalScalar avals the given string as Perl code, in scalar context
+func (gpi *Interpreter) EvalScalar(code string) (*Scalar, error) {
+	C.go_perl_open_scope(gpi.pi)
+	defer C.go_perl_close_scope(gpi.pi)
+
+	perlCode := toPerlMortalString(gpi, code)
+
+	var exc *C.go_perl_sv
+	var result *C.go_perl_sv
+	var rescount = C.go_perl_eval_scalar(gpi.pi, perlCode, &exc, &result)
+	if rescount < 0 {
+		return nil, gpi.evalError(rescount, exc)
+	}
+
+	return newScalarFromMortal(gpi, result), nil
+}
+
+// EvalList avals the given string as Perl code, in list context
+func (gpi *Interpreter) EvalList(code string) ([]*Scalar, error) {
+	C.go_perl_open_scope(gpi.pi)
+	defer C.go_perl_close_scope(gpi.pi)
+
+	perlCode := toPerlMortalString(gpi, code)
+
+	var exc *C.go_perl_sv
+	var results **C.go_perl_sv
+	var rescount = C.go_perl_eval_list(gpi.pi, perlCode, &exc, &results)
+	if rescount < 0 {
+		return nil, gpi.evalError(rescount, exc)
+	}
+	defer C.free(unsafe.Pointer(results))
+
+	return newScalarSliceFromMortals(gpi, int(rescount), results), nil
+}
+
 func (gpi *Interpreter) evalError(errCode C.int, exc *C.go_perl_sv) error {
 	if errCode == -2 {
 		return ErrExitCalled

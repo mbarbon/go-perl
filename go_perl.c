@@ -86,6 +86,20 @@ static I32 do_call(go_perl_interpreter* my_perl, go_perl_sv* sub, I32 flags, int
     return retcount;
 }
 
+static int return_list(go_perl_interpreter* my_perl, I32 retcount, go_perl_sv*** result) {
+    if (retcount != 0) {
+        dSP;
+        go_perl_sv** res = (go_perl_sv**) malloc(sizeof(go_perl_sv*) * retcount);
+        for (int i = retcount - 1; i >= 0; --i) {
+            res[i] = POPs;
+        }
+        *result = res;
+        PUTBACK;
+    }
+
+    return retcount;
+}
+
 void go_perl_init() {
     PERL_SYS_INIT3(&go_perl_argc, &go_perl_argv, &go_perl_env);
 }
@@ -145,6 +159,28 @@ int go_perl_eval_void(go_perl_interpreter* my_perl, go_perl_sv* code, go_perl_sv
     return 0;
 }
 
+int go_perl_eval_scalar(go_perl_interpreter* my_perl, go_perl_sv* code, go_perl_sv**exc, go_perl_sv** result) {
+    I32 retcount = do_eval(my_perl, code, G_SCALAR, exc);
+    if (retcount < 0) {
+        return retcount;
+    }
+
+    dSP;
+    *result = POPs;
+    PUTBACK;
+
+    return 0;
+}
+
+int go_perl_eval_list(go_perl_interpreter* my_perl, go_perl_sv* code, go_perl_sv** exc, go_perl_sv*** result) {
+    I32 retcount = do_eval(my_perl, code, G_ARRAY, exc);
+    if (retcount < 0) {
+        return retcount;
+    }
+
+    return return_list(my_perl, retcount, result);
+}
+
 int go_perl_call_void(go_perl_interpreter* my_perl, go_perl_sv* sub, int argcount, go_perl_sv** args, go_perl_sv** exc) {
     I32 retcount = do_call(my_perl, sub, G_VOID, argcount, args, exc);
     if (retcount < 0) {
@@ -152,4 +188,26 @@ int go_perl_call_void(go_perl_interpreter* my_perl, go_perl_sv* sub, int argcoun
     }
 
     return 0;
+}
+
+int go_perl_call_scalar(go_perl_interpreter* my_perl, go_perl_sv* sub, int argcount, go_perl_sv** args, go_perl_sv**exc, go_perl_sv** result) {
+    I32 retcount = do_call(my_perl, sub, G_SCALAR, argcount, args, exc);
+    if (retcount < 0) {
+        return retcount;
+    }
+
+    dSP;
+    *result = POPs;
+    PUTBACK;
+
+    return 0;
+}
+
+int go_perl_call_list(go_perl_interpreter* my_perl, go_perl_sv* sub, int argcount, go_perl_sv** args, go_perl_sv** exc, go_perl_sv*** result) {
+    I32 retcount = do_call(my_perl, sub, G_ARRAY, argcount, args, exc);
+    if (retcount < 0) {
+        return retcount;
+    }
+
+    return return_list(my_perl, retcount, result);
 }

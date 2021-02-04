@@ -47,3 +47,12 @@ func toPerlArgList(gpi *Interpreter, goValues []interface{}) (**C.go_perl_sv, er
 	}
 	return perlValues, nil
 }
+
+func newScalarSliceFromMortals(gpi *Interpreter, count int, values **C.go_perl_sv) []*Scalar {
+	slice := make([]*Scalar, count)
+	for i := 0; i < count; i++ {
+		result := (**C.go_perl_sv)(unsafe.Pointer(uintptr(unsafe.Pointer(values)) + uintptr(C.sizeof_go_perl_pointer_type*i)))
+		slice[i] = newScalarFromMortal(gpi, *result)
+	}
+	return slice
+}
