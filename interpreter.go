@@ -76,7 +76,7 @@ func (gpi *Interpreter) EvalVoid(code string) error {
 	C.go_perl_open_scope(gpi.pi)
 	defer C.go_perl_close_scope(gpi.pi)
 
-	perlCode := toPerlMortalString(gpi, code)
+	perlCode := toPerlMortalString(gpi, code, 1)
 
 	var exc *C.go_perl_sv
 	var rescount = C.go_perl_eval_void(gpi.pi, perlCode, &exc)
@@ -92,7 +92,7 @@ func (gpi *Interpreter) EvalScalar(code string) (*Scalar, error) {
 	C.go_perl_open_scope(gpi.pi)
 	defer C.go_perl_close_scope(gpi.pi)
 
-	perlCode := toPerlMortalString(gpi, code)
+	perlCode := toPerlMortalString(gpi, code, 1)
 
 	var exc *C.go_perl_sv
 	var result *C.go_perl_sv
@@ -109,7 +109,7 @@ func (gpi *Interpreter) EvalList(code string) ([]*Scalar, error) {
 	C.go_perl_open_scope(gpi.pi)
 	defer C.go_perl_close_scope(gpi.pi)
 
-	perlCode := toPerlMortalString(gpi, code)
+	perlCode := toPerlMortalString(gpi, code, 1)
 
 	var exc *C.go_perl_sv
 	var results **C.go_perl_sv

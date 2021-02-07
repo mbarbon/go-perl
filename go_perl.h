@@ -24,9 +24,17 @@ go_perl_cv* go_perl_get_global_code(go_perl_interpreter* my_perl, const char* na
 void go_perl_sv_refcnt_inc(go_perl_interpreter* my_perl, go_perl_sv* sv);
 void go_perl_sv_refcnt_dec(go_perl_interpreter* my_perl, go_perl_sv* sv);
 
-go_perl_sv* go_perl_new_mortal_sv_string(go_perl_interpreter* my_perl, char* pv, STRLEN len);
+go_perl_sv* go_perl_new_mortal_sv_iv(go_perl_interpreter* my_perl, IV iv);
+go_perl_sv* go_perl_new_mortal_sv_uv(go_perl_interpreter* my_perl, UV iv);
+go_perl_sv* go_perl_new_mortal_sv_nv(go_perl_interpreter* my_perl, NV iv);
+go_perl_sv* go_perl_new_mortal_sv_string(go_perl_interpreter* my_perl, char* pv, STRLEN len, int want_utf8);
 
+IV go_perl_sviv(go_perl_interpreter* my_perl, go_perl_sv* sv);
+UV go_perl_svuv(go_perl_interpreter* my_perl, go_perl_sv* sv);
+NV go_perl_svnv(go_perl_interpreter* my_perl, go_perl_sv* sv);
 char* go_perl_svpv(go_perl_interpreter* my_perl, go_perl_sv* sv, go_perl_strlen* len);
+char* go_perl_svpv_bytes(go_perl_interpreter* my_perl, go_perl_sv* sv, go_perl_strlen* len);
+char* go_perl_svpv_utf8(go_perl_interpreter* my_perl, go_perl_sv* sv, go_perl_strlen* len);
 
 int go_perl_eval_void(go_perl_interpreter* my_perl, go_perl_sv* code, go_perl_sv** exc);
 int go_perl_eval_scalar(go_perl_interpreter* my_perl, go_perl_sv* code, go_perl_sv** exc, go_perl_sv** result);
