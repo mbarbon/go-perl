@@ -9,6 +9,34 @@ import (
 	"unsafe"
 )
 
+// ScalarType represents the type of value held by a Scalar
+type ScalarType int
+
+const (
+	// Undef is an undefined scalars
+	Undef ScalarType = iota + 1
+	// Int is a signed integer value
+	Int
+	// UInt is an unsigned integer value
+	UInt
+	// Float is a floating point value
+	Float
+	// String is a string value
+	String
+	// ScalarRef is a reference to a scalar value
+	ScalarRef
+	// ArrayRef is a reference to an array value
+	ArrayRef
+	// HashRef is a reference to an hash value
+	HashRef
+	// CodeRef is a reference to a code value
+	CodeRef
+	// RegexpRef is a reference to a regexp
+	RegexpRef
+	// Unknown is a reference to a scalar value
+	Unknown
+)
+
 // Scalar wraps a Perl scalar value
 type Scalar struct {
 	gpi *Interpreter
@@ -113,6 +141,37 @@ func (s *Scalar) Float64() float64 {
 	return float64(C.go_perl_svnv(s.gpi.pi, s.sv))
 }
 
+// Type returns the type of value stored in this scalar
+func (s *Scalar) Type() ScalarType {
+	svType := C.go_perl_sv_type(s.gpi.pi, s.sv)
+	svFlags := C.go_perl_decoded_sv_flags(s.gpi.pi, s.sv)
+
+	if svFlags&C.GO_PERL_SVf_RV != 0 {
+		rv := C.go_perl_svrv(s.gpi.pi, s.sv)
+		rvType := C.go_perl_sv_type(s.gpi.pi, rv)
+		rvFlags := C.go_perl_decoded_sv_flags(s.gpi.pi, rv)
+		return refType(rvType, rvFlags)
+	}
+
+	switch svType {
+	case C.SVt_NULL:
+		return Undef
+	case C.SVt_IV, C.SVt_NV, C.SVt_PV, C.SVt_PVIV, C.SVt_PVNV, C.SVt_PVMG:
+		if svFlags&C.GO_PERL_SVf_NV != 0 {
+			return Float
+		} else if svFlags&C.GO_PERL_SVf_UV != 0 {
+			return UInt
+		} else if svFlags&C.GO_PERL_SVf_IV != 0 {
+			return Int
+		} else if svFlags&C.GO_PERL_SVf_PV != 0 {
+			return String
+		}
+		return Undef
+	default:
+		return Unknown
+	}
+}
+
 func (s *Scalar) setFinalizer() {
 	runtime.SetFinalizer(s, func(s *Scalar) {
 		C.go_perl_sv_refcnt_dec(s.gpi.pi, s.sv)
@@ -125,4 +184,21 @@ func (s *Scalar) asError() *scalarError {
 
 func (se *scalarError) Error() string {
 	return se.scalar.String()
+}
+
+func refType(svType, svFlags C.int) ScalarType {
+	switch svType {
+	case C.SVt_NULL, C.SVt_IV, C.SVt_NV, C.SVt_PV, C.SVt_PVIV, C.SVt_PVNV, C.SVt_PVMG:
+		return ScalarRef
+	case C.SVt_REGEXP:
+		return RegexpRef
+	case C.SVt_PVAV:
+		return ArrayRef
+	case C.SVt_PVHV:
+		return HashRef
+	case C.SVt_PVCV:
+		return CodeRef
+	default:
+		return Unknown
+	}
 }

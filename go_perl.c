@@ -173,6 +173,40 @@ void go_perl_sv_refcnt_dec(go_perl_interpreter* my_perl, go_perl_sv* sv) {
     SvREFCNT_dec(sv);
 }
 
+int go_perl_sv_type(go_perl_interpreter* my_perl, go_perl_sv* sv) {
+    return SvTYPE(sv);
+}
+
+int go_perl_sv_flags(go_perl_interpreter* my_perl, go_perl_sv* sv) {
+    return SvFLAGS(sv);
+}
+
+int go_perl_decoded_sv_flags(go_perl_interpreter* my_perl, go_perl_sv* sv) {
+    if (SvROK(sv)) {
+        return GO_PERL_SVf_RV;
+    }
+
+    int decoded_flags = 0;
+
+    if (SvNOK(sv)) {
+        decoded_flags |= GO_PERL_SVf_NV;
+    }
+    if (SvIOK(sv)) {
+        decoded_flags |= GO_PERL_SVf_IV;
+    }
+    if (SvUOK(sv)) {
+        decoded_flags |= GO_PERL_SVf_UV;
+    }
+    if (SvPOK(sv)) {
+        decoded_flags |= GO_PERL_SVf_PV;
+        if (SvUTF8(sv)) {
+        decoded_flags |= GO_PERL_SVf_PVutf8;
+        }
+    }
+
+    return decoded_flags;
+}
+
 go_perl_sv* go_perl_new_mortal_sv_iv(go_perl_interpreter* my_perl, IV iv){
     return sv_2mortal(newSViv(iv));
 }
@@ -213,6 +247,10 @@ char* go_perl_svpv_bytes(go_perl_interpreter* my_perl, go_perl_sv* sv, go_perl_s
 
 char* go_perl_svpv_utf8(go_perl_interpreter* my_perl, go_perl_sv* sv, go_perl_strlen* len) {
     return SvPVutf8(sv, *len);
+}
+
+go_perl_sv* go_perl_svrv(go_perl_interpreter* my_perl, go_perl_sv* sv) {
+    return SvRV(sv);
 }
 
 IV go_perl_sviv(go_perl_interpreter* my_perl, go_perl_sv* sv) {

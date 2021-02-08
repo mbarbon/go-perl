@@ -34,3 +34,25 @@ func TestScalarUtf8Bytes(t *testing.T) {
 
 	assert.Equal(t, []byte("\xc3\x89"), s.Utf8Bytes())
 }
+
+func TestScalarType(t *testing.T) {
+	testScalarType(t, `undef`, Undef)
+	testScalarType(t, `$a = 1; undef $a; $a`, Undef)
+	testScalarType(t, `$a = 1; $a`, Int)
+	testScalarType(t, `$a = 0x8000000000000000; $a`, UInt)
+	testScalarType(t, `$a = 1.3; $a`, Float)
+	testScalarType(t, `$a = 'abc'; $a`, String)
+	testScalarType(t, `$a = '한글'; $a`, String)
+	testScalarType(t, `$a = \1; $a`, ScalarRef)
+	testScalarType(t, `$a = []; $a`, ArrayRef)
+	testScalarType(t, `$a = {}; $a`, HashRef)
+	testScalarType(t, `$a = sub { $b }; $a`, CodeRef)
+	testScalarType(t, `$a = qr/abc/; $a`, RegexpRef)
+}
+
+func testScalarType(t *testing.T, code string, expected ScalarType) {
+	i := NewInterpreter()
+	s, err := i.EvalScalar(code)
+	errPanic(err)
+	assert.Equal(t, expected, s.Type())
+}

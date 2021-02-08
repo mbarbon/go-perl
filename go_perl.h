@@ -6,6 +6,13 @@
 #include "perl.h"
 #include "XSUB.h"
 
+#define GO_PERL_SVf_IV     0x0001
+#define GO_PERL_SVf_UV     0x0002
+#define GO_PERL_SVf_NV     0x0004
+#define GO_PERL_SVf_PV     0x0008
+#define GO_PERL_SVf_PVutf8 0x0010
+#define GO_PERL_SVf_RV     0x0020
+
 typedef int* go_perl_pointer_type;
 typedef PerlInterpreter go_perl_interpreter;
 typedef SV go_perl_sv;
@@ -24,11 +31,16 @@ go_perl_cv* go_perl_get_global_code(go_perl_interpreter* my_perl, const char* na
 void go_perl_sv_refcnt_inc(go_perl_interpreter* my_perl, go_perl_sv* sv);
 void go_perl_sv_refcnt_dec(go_perl_interpreter* my_perl, go_perl_sv* sv);
 
+int go_perl_sv_type(go_perl_interpreter* my_perl, go_perl_sv* sv);
+int go_perl_sv_flags(go_perl_interpreter* my_perl, go_perl_sv* sv);
+int go_perl_decoded_sv_flags(go_perl_interpreter* my_perl, go_perl_sv* sv);
+
 go_perl_sv* go_perl_new_mortal_sv_iv(go_perl_interpreter* my_perl, IV iv);
 go_perl_sv* go_perl_new_mortal_sv_uv(go_perl_interpreter* my_perl, UV iv);
 go_perl_sv* go_perl_new_mortal_sv_nv(go_perl_interpreter* my_perl, NV iv);
 go_perl_sv* go_perl_new_mortal_sv_string(go_perl_interpreter* my_perl, char* pv, STRLEN len, int want_utf8);
 
+go_perl_sv* go_perl_svrv(go_perl_interpreter* my_perl, go_perl_sv* sv);
 IV go_perl_sviv(go_perl_interpreter* my_perl, go_perl_sv* sv);
 UV go_perl_svuv(go_perl_interpreter* my_perl, go_perl_sv* sv);
 NV go_perl_svnv(go_perl_interpreter* my_perl, go_perl_sv* sv);
