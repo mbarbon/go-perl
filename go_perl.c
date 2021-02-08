@@ -265,6 +265,14 @@ NV go_perl_svnv(go_perl_interpreter* my_perl, go_perl_sv* sv) {
     return SvNV(sv);
 }
 
+go_perl_sv** go_perl_av_fetch(go_perl_interpreter* my_perl, go_perl_av* av, I32 index) {
+    return av_fetch(av, index, 0);
+}
+
+go_perl_sv** go_perl_hv_fetch(go_perl_interpreter* my_perl, go_perl_hv* hv, const char *key, I32 klen) {
+    return hv_fetch(hv, key, klen, 0);
+}
+
 int go_perl_eval_void(go_perl_interpreter* my_perl, go_perl_sv* code, go_perl_sv** exc) {
     I32 retcount = do_eval(my_perl, code, G_VOID, exc);
     if (retcount < 0) {

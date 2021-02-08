@@ -4,7 +4,10 @@ package perl
 #include "go_perl.h"
 */
 import "C"
-import "unsafe"
+import (
+	"runtime"
+	"unsafe"
+)
 
 // Sub wraps a Perl subroutine value
 type Sub struct {
@@ -17,6 +20,13 @@ func newSub(gpi *Interpreter, cv *C.go_perl_cv) *Sub {
 		gpi: gpi,
 		cv:  cv,
 	}
+}
+
+func newSubFromMortal(gpi *Interpreter, cv *C.go_perl_cv) *Sub {
+	s := newSub(gpi, cv)
+	C.go_perl_sv_refcnt_inc(gpi.pi, C.cv_to_sv(cv))
+	s.setFinalizer()
+	return s
 }
 
 // CallVoid calls this sub in void context
@@ -80,4 +90,10 @@ func (s *Sub) CallList(goArgs ...interface{}) ([]*Scalar, error) {
 	defer C.free(unsafe.Pointer(results))
 
 	return newScalarSliceFromMortals(s.gpi, int(rescount), results), nil
+}
+
+func (s *Sub) setFinalizer() {
+	runtime.SetFinalizer(s, func(s *Sub) {
+		C.go_perl_sv_refcnt_dec(s.gpi.pi, C.cv_to_sv(s.cv))
+	})
 }

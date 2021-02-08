@@ -141,6 +141,38 @@ func (s *Scalar) Float64() float64 {
 	return float64(C.go_perl_svnv(s.gpi.pi, s.sv))
 }
 
+// Scalar returns the Scalar value wrapped by a scalar reference, or nil
+func (s *Scalar) Scalar() *Scalar {
+	if s.Type() != ScalarRef {
+		return nil
+	}
+	return newScalarFromMortal(s.gpi, C.go_perl_svrv(s.gpi.pi, s.sv))
+}
+
+// Array returns the Array value wrapped by a scalar reference, or nil
+func (s *Scalar) Array() *Array {
+	if s.Type() != ArrayRef {
+		return nil
+	}
+	return newArrayFromMortal(s.gpi, C.sv_to_av(C.go_perl_svrv(s.gpi.pi, s.sv)))
+}
+
+// Hash returns the Hash value wrapped by a scalar reference, or nil
+func (s *Scalar) Hash() *Hash {
+	if s.Type() != HashRef {
+		return nil
+	}
+	return newHashFromMortal(s.gpi, C.sv_to_hv(C.go_perl_svrv(s.gpi.pi, s.sv)))
+}
+
+// Code returns the Sub value wrapped by a scalar reference, or nil
+func (s *Scalar) Code() *Sub {
+	if s.Type() != CodeRef {
+		return nil
+	}
+	return newSubFromMortal(s.gpi, C.sv_to_cv(C.go_perl_svrv(s.gpi.pi, s.sv)))
+}
+
 // Type returns the type of value stored in this scalar
 func (s *Scalar) Type() ScalarType {
 	svType := C.go_perl_sv_type(s.gpi.pi, s.sv)

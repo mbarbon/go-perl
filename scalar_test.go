@@ -50,6 +50,20 @@ func TestScalarType(t *testing.T) {
 	testScalarType(t, `$a = qr/abc/; $a`, RegexpRef)
 }
 
+func TestScalarCode(t *testing.T) {
+	i := NewInterpreter()
+	s, err := i.EvalScalar(`sub { 'abc' }`)
+	errPanic(err)
+
+	sub := s.Code()
+	assert.NotNil(t, sub)
+
+	r, err := sub.CallScalar()
+	errPanic(err)
+
+	assert.Equal(t, "abc", r.String())
+}
+
 func testScalarType(t *testing.T, code string, expected ScalarType) {
 	i := NewInterpreter()
 	s, err := i.EvalScalar(code)

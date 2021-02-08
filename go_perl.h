@@ -16,6 +16,8 @@
 typedef int* go_perl_pointer_type;
 typedef PerlInterpreter go_perl_interpreter;
 typedef SV go_perl_sv;
+typedef AV go_perl_av;
+typedef HV go_perl_hv;
 typedef CV go_perl_cv;
 typedef STRLEN go_perl_strlen;
 
@@ -48,6 +50,10 @@ char* go_perl_svpv(go_perl_interpreter* my_perl, go_perl_sv* sv, go_perl_strlen*
 char* go_perl_svpv_bytes(go_perl_interpreter* my_perl, go_perl_sv* sv, go_perl_strlen* len);
 char* go_perl_svpv_utf8(go_perl_interpreter* my_perl, go_perl_sv* sv, go_perl_strlen* len);
 
+go_perl_sv** go_perl_av_fetch(go_perl_interpreter* my_perl, go_perl_av* av, I32 index);
+
+go_perl_sv** go_perl_hv_fetch(go_perl_interpreter* my_perl, go_perl_hv* hv, const char *key, I32 klen);
+
 int go_perl_eval_void(go_perl_interpreter* my_perl, go_perl_sv* code, go_perl_sv** exc);
 int go_perl_eval_scalar(go_perl_interpreter* my_perl, go_perl_sv* code, go_perl_sv** exc, go_perl_sv** result);
 int go_perl_eval_list(go_perl_interpreter* my_perl, go_perl_sv* code, go_perl_sv** exc, go_perl_sv*** results);
@@ -55,5 +61,31 @@ int go_perl_eval_list(go_perl_interpreter* my_perl, go_perl_sv* code, go_perl_sv
 int go_perl_call_void(go_perl_interpreter* my_perl, go_perl_sv* sub, int argcount, go_perl_sv** args, go_perl_sv** exc);
 int go_perl_call_scalar(go_perl_interpreter* my_perl, go_perl_sv* sub, int argcount, go_perl_sv** args, go_perl_sv** exc, go_perl_sv** result);
 int go_perl_call_list(go_perl_interpreter* my_perl, go_perl_sv* sub, int argcount, go_perl_sv** args, go_perl_sv** exc, go_perl_sv*** results);
+
+// casts
+
+inline go_perl_sv* cv_to_sv(go_perl_cv* cv) {
+    return (go_perl_sv*) cv;
+}
+
+inline go_perl_cv* sv_to_cv(go_perl_sv* sv) {
+    return (go_perl_cv*) sv;
+}
+
+inline go_perl_sv* av_to_sv(go_perl_av* av) {
+    return (go_perl_sv*) av;
+}
+
+inline go_perl_av* sv_to_av(go_perl_sv* sv) {
+    return (go_perl_av*) sv;
+}
+
+inline go_perl_sv* hv_to_sv(go_perl_hv* hv) {
+    return (go_perl_sv*) hv;
+}
+
+inline go_perl_hv* sv_to_hv(go_perl_sv* sv) {
+    return (go_perl_hv*) sv;
+}
 
 #endif
